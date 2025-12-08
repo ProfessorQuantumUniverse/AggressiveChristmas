@@ -9,6 +9,8 @@ let ornamentsEnabled = true;
 let lightsEnabled = true;
 let currentDisplayMode = 'normal';
 let lastMinuteSpoken = -1;
+let wakeLock = null;
+let isFullscreen = false;
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSettings();
     initPopupNotifications();
     initTimeDisplayMode();
+    initFullscreenMode();
     
     // Auto-music if enabled
     if (localStorage.getItem('autoMusic') === 'true') {
@@ -957,3 +960,133 @@ setInterval(() => {
     document.title = titles[titleIndex];
     titleIndex = (titleIndex + 1) % titles.length;
 }, 3000);
+
+// Fullscreen Mode
+function initFullscreenMode() {
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const exitBtn = document.getElementById('exitFullscreenBtn');
+    
+    fullscreenBtn.addEventListener('click', enterFullscreenMode);
+    exitBtn.addEventListener('click', exitFullscreenMode);
+    
+    // Handle ESC key to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isFullscreen) {
+            exitFullscreenMode();
+        }
+    });
+    
+    // Handle fullscreen change events
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+}
+
+async function enterFullscreenMode() {
+    isFullscreen = true;
+    document.body.classList.add('fullscreen-mode');
+    
+    // Request browser fullscreen
+    try {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            await elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            await elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            await elem.msRequestFullscreen();
+        }
+    } catch (err) {
+        console.log('Fullscreen request failed:', err);
+    }
+    
+    // Request wake lock to prevent screen sleep
+    await requestWakeLock();
+    
+    showPopup('🎄 Fullscreen mode activated!');
+}
+
+async function exitFullscreenMode() {
+    isFullscreen = false;
+    document.body.classList.remove('fullscreen-mode');
+    
+    // Exit browser fullscreen
+    try {
+        if (document.exitFullscreen) {
+            await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            await document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            await document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            await document.msExitFullscreen();
+        }
+    } catch (err) {
+        console.log('Exit fullscreen failed:', err);
+    }
+    
+    // Release wake lock
+    await releaseWakeLock();
+    
+    showPopup('🎅 Fullscreen mode exited');
+}
+
+function handleFullscreenChange() {
+    // If browser fullscreen is exited manually, update our state
+    const isInFullscreen = !!(document.fullscreenElement || 
+                             document.webkitFullscreenElement || 
+                             document.mozFullScreenElement || 
+                             document.msFullscreenElement);
+    
+    if (!isInFullscreen && isFullscreen) {
+        exitFullscreenMode();
+    }
+}
+
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock acquired');
+            
+            // Re-request wake lock if it's released (e.g., when tab becomes inactive)
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock released');
+                if (isFullscreen) {
+                    // Try to re-acquire after a short delay
+                    setTimeout(() => {
+                        if (isFullscreen) {
+                            requestWakeLock();
+                        }
+                    }, 1000);
+                }
+            });
+        } catch (err) {
+            console.log('Wake Lock request failed:', err);
+        }
+    } else {
+        console.log('Wake Lock API not supported');
+    }
+}
+
+async function releaseWakeLock() {
+    if (wakeLock !== null) {
+        try {
+            await wakeLock.release();
+            wakeLock = null;
+            console.log('Wake Lock released manually');
+        } catch (err) {
+            console.log('Wake Lock release failed:', err);
+        }
+    }
+}
+
+// Re-request wake lock when page becomes visible (in case it was released)
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && isFullscreen && wakeLock === null) {
+        await requestWakeLock();
+    }
+});

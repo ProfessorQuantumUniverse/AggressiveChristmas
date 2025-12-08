@@ -149,7 +149,7 @@ body {
 .countdown-box {
     background: linear-gradient(135deg, var(--christmas-red), #a01729);
     border-radius: 20px;
-    padding: 30px 40px;
+    padding: 40px 50px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     border: 3px solid var(--christmas-gold);
     transition: transform 0.3s ease;
@@ -167,14 +167,14 @@ body {
 
 .countdown-number {
     font-family: 'Mountains of Christmas', cursive;
-    font-size: 4rem;
+    font-size: 6rem;
     font-weight: 700;
     text-align: center;
     text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
 }
 
 .countdown-label {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     text-align: center;
     margin-top: 10px;
     opacity: 0.9;
@@ -183,7 +183,7 @@ body {
 }
 
 .countdown-separator {
-    font-size: 4rem;
+    font-size: 6rem;
     font-weight: 700;
     animation: blink 1s infinite;
 }
@@ -789,11 +789,19 @@ body {
     }
     
     .countdown-number {
-        font-size: 2.5rem;
+        font-size: 3.5rem;
+    }
+    
+    .countdown-separator {
+        font-size: 3.5rem;
     }
     
     .countdown-box {
-        padding: 20px 25px;
+        padding: 25px 30px;
+    }
+    
+    .countdown-label {
+        font-size: 1rem;
     }
     
     .features-grid {
@@ -809,6 +817,16 @@ body {
     }
     
     .btn-effect-large {
+        width: 100%;
+    }
+    
+    .mode-selector label {
+        font-size: 1rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+    .mode-dropdown {
         width: 100%;
     }
 }
@@ -837,4 +855,184 @@ body {
     25% { transform: translateX(-5px); }
     50% { transform: translateX(5px); }
     75% { transform: translateX(-5px); }
+}
+
+/* Fullscreen Mode Styles */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 90px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--christmas-gold), #ffed4e);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    transition: transform 0.3s ease;
+    border: 3px solid var(--christmas-red);
+}
+
+.fullscreen-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Fullscreen mode active state */
+body.fullscreen-mode .container > *:not(.countdown-section) {
+    display: none !important;
+}
+
+body.fullscreen-mode .countdown-section .mode-selector {
+    display: none !important;
+}
+
+body.fullscreen-mode .countdown-section .progress-bar-container {
+    display: none !important;
+}
+
+body.fullscreen-mode .header {
+    display: none !important;
+}
+
+body.fullscreen-mode #ornaments-container,
+body.fullscreen-mode #lights-container,
+body.fullscreen-mode #popup-container,
+body.fullscreen-mode #particles-container,
+body.fullscreen-mode .settings-toggle,
+body.fullscreen-mode .settings-panel,
+body.fullscreen-mode .footer,
+body.fullscreen-mode .fullscreen-btn {
+    display: none !important;
+}
+
+body.fullscreen-mode {
+    overflow: hidden;
+}
+
+body.fullscreen-mode .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+body.fullscreen-mode .countdown-section {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+body.fullscreen-mode .countdown-container {
+    gap: 30px;
+    transform: scale(1.2);
+}
+
+body.fullscreen-mode .countdown-number {
+    font-size: 8rem;
+}
+
+body.fullscreen-mode .countdown-separator {
+    font-size: 8rem;
+}
+
+body.fullscreen-mode .countdown-label {
+    font-size: 2rem;
+}
+
+body.fullscreen-mode .countdown-box {
+    padding: 50px 60px;
+}
+
+/* Exit fullscreen button */
+.exit-fullscreen-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 30px;
+    background: linear-gradient(135deg, var(--christmas-red), var(--candy-cane));
+    color: white;
+    border: 3px solid var(--christmas-gold);
+    border-radius: 15px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    display: none;
+    transition: transform 0.3s ease;
+}
+
+.exit-fullscreen-btn:hover {
+    transform: scale(1.05);
+}
+
+body.fullscreen-mode .exit-fullscreen-btn {
+    display: block;
+}
+
+/* Mobile fullscreen adjustments */
+@media (max-width: 768px) {
+    body.fullscreen-mode .countdown-container {
+        transform: scale(1);
+        gap: 15px;
+    }
+    
+    body.fullscreen-mode .countdown-number {
+        font-size: 4.5rem;
+    }
+    
+    body.fullscreen-mode .countdown-separator {
+        font-size: 4.5rem;
+    }
+    
+    body.fullscreen-mode .countdown-label {
+        font-size: 1.2rem;
+    }
+    
+    body.fullscreen-mode .countdown-box {
+        padding: 30px 35px;
+    }
+    
+    .exit-fullscreen-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .fullscreen-btn {
+        bottom: 20px;
+        left: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    body.fullscreen-mode .countdown-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    body.fullscreen-mode .countdown-separator {
+        display: none;
+    }
+    
+    body.fullscreen-mode .countdown-number {
+        font-size: 3.5rem;
+    }
+    
+    body.fullscreen-mode .countdown-label {
+        font-size: 1rem;
+    }
+    
+    body.fullscreen-mode .countdown-box {
+        padding: 25px 30px;
+    }
 }
