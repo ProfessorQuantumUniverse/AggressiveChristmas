@@ -33,6 +33,23 @@
 
         <!-- Countdown Display -->
         <div class="countdown-section">
+            <!-- Time Display Mode Selector -->
+            <div class="mode-selector">
+                <label for="timeDisplayMode">Time Display Mode: </label>
+                <select id="timeDisplayMode" class="mode-dropdown">
+                    <option value="normal">Normal</option>
+                    <option value="binary">Binary</option>
+                    <option value="milliseconds">Milliseconds</option>
+                    <option value="years">Years (Decimal)</option>
+                    <option value="unix">Unix Timestamp</option>
+                    <option value="hex">Hexadecimal</option>
+                    <option value="percentage">Percentage</option>
+                    <option value="seconds">Seconds Only</option>
+                    <option value="scientific">Scientific Notation</option>
+                    <option value="octal">Octal</option>
+                </select>
+            </div>
+            
             <div class="countdown-container">
                 <div class="countdown-box">
                     <div class="countdown-number" id="days">0</div>
