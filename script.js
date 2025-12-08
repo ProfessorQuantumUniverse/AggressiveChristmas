@@ -1005,8 +1005,6 @@ async function enterFullscreenMode() {
     
     // Request wake lock to prevent screen sleep
     await requestWakeLock();
-    
-    showPopup('🎄 Fullscreen mode activated!');
 }
 
 async function exitFullscreenMode() {
@@ -1030,8 +1028,6 @@ async function exitFullscreenMode() {
     
     // Release wake lock
     await releaseWakeLock();
-    
-    showPopup('🎅 Fullscreen mode exited');
 }
 
 function handleFullscreenChange() {
@@ -1042,7 +1038,12 @@ function handleFullscreenChange() {
                              document.msFullscreenElement);
     
     if (!isInFullscreen && isFullscreen) {
-        exitFullscreenMode();
+        // Browser exited fullscreen (e.g., user pressed ESC)
+        // Just update our state without calling document.exitFullscreen again
+        isFullscreen = false;
+        document.body.classList.remove('fullscreen-mode');
+        releaseWakeLock();
+        showPopup('🎅 Fullscreen mode exited');
     }
 }
 
@@ -1055,14 +1056,7 @@ async function requestWakeLock() {
             // Re-request wake lock if it's released (e.g., when tab becomes inactive)
             wakeLock.addEventListener('release', () => {
                 console.log('Wake Lock released');
-                if (isFullscreen) {
-                    // Try to re-acquire after a short delay
-                    setTimeout(() => {
-                        if (isFullscreen) {
-                            requestWakeLock();
-                        }
-                    }, 1000);
-                }
+                wakeLock = null;
             });
         } catch (err) {
             console.log('Wake Lock request failed:', err);
