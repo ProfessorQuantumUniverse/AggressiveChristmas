@@ -138,14 +138,22 @@ function displayTimeInMode(days, hours, minutes, seconds, totalMilliseconds) {
             break;
             
         case 'percentage':
-            const totalSecondsInYear = 365.25 * 24 * 60 * 60;
-            const secondsUntilChristmas = totalMilliseconds / 1000;
-            const percentage = (secondsUntilChristmas / totalSecondsInYear) * 100;
-            document.getElementById('days').textContent = percentage.toFixed(6);
-            document.getElementById('hours').textContent = (100 - percentage).toFixed(6);
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const startOfYear = new Date(currentYear, 0, 1);
+            const christmas = new Date(currentYear, 11, 25);
+            if (now > christmas) {
+                christmas.setFullYear(currentYear + 1);
+            }
+            const totalTimeToChristmas = christmas - startOfYear;
+            const timeRemaining = totalMilliseconds;
+            const percentageRemaining = (timeRemaining / totalTimeToChristmas) * 100;
+            const percentageElapsed = 100 - percentageRemaining;
+            document.getElementById('days').textContent = percentageRemaining.toFixed(6);
+            document.getElementById('hours').textContent = percentageElapsed.toFixed(6);
             document.getElementById('minutes').textContent = '';
             document.getElementById('seconds').textContent = '';
-            updateLabels('% of Year Left', '% of Year Gone', '', '');
+            updateLabels('% Until Christmas', '% of Journey Done', '', '');
             break;
             
         case 'seconds':
