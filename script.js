@@ -7,6 +7,8 @@ let popupsEnabled = true;
 let snowEnabled = true;
 let ornamentsEnabled = true;
 let lightsEnabled = true;
+let currentDisplayMode = 'normal';
+let lastMinuteSpoken = -1;
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatistics();
     initSettings();
     initPopupNotifications();
+    initTimeDisplayMode();
     
     // Auto-music if enabled
     if (localStorage.getItem('autoMusic') === 'true') {
@@ -54,10 +57,8 @@ function updateCountdown() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
     
-    document.getElementById('days').textContent = days;
-    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+    // Display based on current mode
+    displayTimeInMode(days, hours, minutes, seconds, diff);
     
     // Update progress bar
     const startOfYear = new Date(currentYear, 0, 1);
@@ -70,6 +71,196 @@ function updateCountdown() {
     
     // Update sleeps left
     document.getElementById('sleepsLeft').textContent = days;
+    
+    // Play beep every second
+    playBeep();
+    
+    // Text-to-speech once per minute
+    speakTimeOncePerMinute(days, hours, minutes, seconds);
+}
+
+// Time Display Mode Functions
+function displayTimeInMode(days, hours, minutes, seconds, totalMilliseconds) {
+    const mode = currentDisplayMode;
+    
+    switch(mode) {
+        case 'normal':
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            updateLabels('Days', 'Hours', 'Minutes', 'Seconds');
+            break;
+            
+        case 'binary':
+            document.getElementById('days').textContent = days.toString(2);
+            document.getElementById('hours').textContent = hours.toString(2).padStart(5, '0');
+            document.getElementById('minutes').textContent = minutes.toString(2).padStart(6, '0');
+            document.getElementById('seconds').textContent = seconds.toString(2).padStart(6, '0');
+            updateLabels('Days (bin)', 'Hours (bin)', 'Minutes (bin)', 'Seconds (bin)');
+            break;
+            
+        case 'milliseconds':
+            const ms = totalMilliseconds;
+            document.getElementById('days').textContent = ms.toLocaleString();
+            document.getElementById('hours').textContent = '';
+            document.getElementById('minutes').textContent = '';
+            document.getElementById('seconds').textContent = (ms % 1000).toString().padStart(3, '0');
+            updateLabels('Total Milliseconds', '', '', 'ms');
+            break;
+            
+        case 'years':
+            const totalYears = totalMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
+            document.getElementById('days').textContent = totalYears.toFixed(8);
+            document.getElementById('hours').textContent = '';
+            document.getElementById('minutes').textContent = '';
+            document.getElementById('seconds').textContent = '';
+            updateLabels('Years (with 8 decimals)', '', '', '');
+            break;
+            
+        case 'unix':
+            const unixTime = Math.floor(Date.now() / 1000);
+            const christmasUnix = Math.floor(new Date(new Date().getFullYear(), 11, 25).getTime() / 1000);
+            const unixDiff = christmasUnix - unixTime;
+            document.getElementById('days').textContent = christmasUnix.toLocaleString();
+            document.getElementById('hours').textContent = unixDiff.toLocaleString();
+            document.getElementById('minutes').textContent = '';
+            document.getElementById('seconds').textContent = '';
+            updateLabels('Christmas Unix', 'Seconds Until', '', '');
+            break;
+            
+        case 'hex':
+            document.getElementById('days').textContent = '0x' + days.toString(16).toUpperCase();
+            document.getElementById('hours').textContent = '0x' + hours.toString(16).toUpperCase().padStart(2, '0');
+            document.getElementById('minutes').textContent = '0x' + minutes.toString(16).toUpperCase().padStart(2, '0');
+            document.getElementById('seconds').textContent = '0x' + seconds.toString(16).toUpperCase().padStart(2, '0');
+            updateLabels('Days (hex)', 'Hours (hex)', 'Minutes (hex)', 'Seconds (hex)');
+            break;
+            
+        case 'percentage':
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const startOfYear = new Date(currentYear, 0, 1);
+            const christmas = new Date(currentYear, 11, 25);
+            if (now > christmas) {
+                christmas.setFullYear(currentYear + 1);
+            }
+            const totalTimeToChristmas = christmas - startOfYear;
+            const timeRemaining = totalMilliseconds;
+            const percentageRemaining = (timeRemaining / totalTimeToChristmas) * 100;
+            const percentageElapsed = 100 - percentageRemaining;
+            document.getElementById('days').textContent = percentageRemaining.toFixed(6);
+            document.getElementById('hours').textContent = percentageElapsed.toFixed(6);
+            document.getElementById('minutes').textContent = '';
+            document.getElementById('seconds').textContent = '';
+            updateLabels('% Until Christmas', '% of Journey Done', '', '');
+            break;
+            
+        case 'seconds':
+            const totalSeconds = Math.floor(totalMilliseconds / 1000);
+            document.getElementById('days').textContent = totalSeconds.toLocaleString();
+            document.getElementById('hours').textContent = '';
+            document.getElementById('minutes').textContent = '';
+            document.getElementById('seconds').textContent = '';
+            updateLabels('Total Seconds', '', '', '');
+            break;
+            
+        case 'scientific':
+            const sciDays = days.toExponential(4);
+            const sciHours = hours.toExponential(2);
+            const sciMinutes = minutes.toExponential(2);
+            const sciSeconds = seconds.toExponential(2);
+            document.getElementById('days').textContent = sciDays;
+            document.getElementById('hours').textContent = sciHours;
+            document.getElementById('minutes').textContent = sciMinutes;
+            document.getElementById('seconds').textContent = sciSeconds;
+            updateLabels('Days (sci)', 'Hours (sci)', 'Minutes (sci)', 'Seconds (sci)');
+            break;
+            
+        case 'octal':
+            document.getElementById('days').textContent = '0o' + days.toString(8);
+            document.getElementById('hours').textContent = '0o' + hours.toString(8).padStart(2, '0');
+            document.getElementById('minutes').textContent = '0o' + minutes.toString(8).padStart(2, '0');
+            document.getElementById('seconds').textContent = '0o' + seconds.toString(8).padStart(2, '0');
+            updateLabels('Days (oct)', 'Hours (oct)', 'Minutes (oct)', 'Seconds (oct)');
+            break;
+    }
+}
+
+function updateLabels(label1, label2, label3, label4) {
+    const labels = document.querySelectorAll('.countdown-label');
+    if (labels[0]) labels[0].textContent = label1;
+    if (labels[1]) labels[1].textContent = label2;
+    if (labels[2]) labels[2].textContent = label3;
+    if (labels[3]) labels[3].textContent = label4;
+}
+
+// Time Display Mode Initialization
+function initTimeDisplayMode() {
+    const selector = document.getElementById('timeDisplayMode');
+    
+    // Load saved mode
+    const savedMode = localStorage.getItem('timeDisplayMode') || 'normal';
+    currentDisplayMode = savedMode;
+    selector.value = savedMode;
+    
+    // Listen for changes
+    selector.addEventListener('change', (e) => {
+        currentDisplayMode = e.target.value;
+        localStorage.setItem('timeDisplayMode', currentDisplayMode);
+        playSound('jingle');
+        showPopup('🎄 Display mode changed to ' + e.target.options[e.target.selectedIndex].text + '!');
+    });
+}
+
+// Beep sound every second
+function playBeep() {
+    if (!audioContext) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (error) {
+            return; // Silently fail if audio context can't be created
+        }
+    }
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.value = 0.05; // Very quiet beep
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.05); // Very short beep
+}
+
+// Text-to-speech once per minute
+function speakTimeOncePerMinute(days, hours, minutes, seconds) {
+    // Only speak once per minute, when seconds == 0
+    if (seconds === 0 && minutes !== lastMinuteSpoken) {
+        lastMinuteSpoken = minutes;
+        
+        // Check if browser supports speech synthesis
+        if ('speechSynthesis' in window) {
+            const text = `It is ${hours} hours and ${minutes} minutes. ${days} days until Christmas.`;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.7; // Slower speech for more annoyance
+            utterance.pitch = 1.0;
+            utterance.volume = 0.8;
+            
+            // Cancel any ongoing speech first
+            window.speechSynthesis.cancel();
+            
+            // Speak after a small delay to ensure previous speech is cancelled
+            setTimeout(() => {
+                window.speechSynthesis.speak(utterance);
+            }, 100);
+        }
+    }
 }
 
 // Snow Effect
