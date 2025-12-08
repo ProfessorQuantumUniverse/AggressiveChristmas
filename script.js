@@ -346,7 +346,13 @@ function initMusicPlayer() {
 function playBackgroundMusic() {
     // Create Web Audio API context for synthesized music
     if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (error) {
+            console.error('Web Audio API not supported:', error);
+            showPopup('⚠️ Audio not supported in this browser');
+            return;
+        }
     }
     
     if (musicPlaying) return;
@@ -407,7 +413,12 @@ function stopBackgroundMusic() {
 
 function playSound(type) {
     if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (error) {
+            console.error('Web Audio API not supported:', error);
+            return;
+        }
     }
     
     const volume = document.getElementById('volumeSlider').value / 100;
@@ -697,12 +708,13 @@ function initPopupNotifications() {
         
         const message = messages[Math.floor(Math.random() * messages.length)];
         showPopup(message);
+        
+        // Schedule next popup with random delay
+        const nextDelay = Math.random() * 30000 + 30000; // 30-60 seconds
+        setTimeout(showRandomPopup, nextDelay);
     }
     
-    // Show popup every 30-60 seconds
-    setInterval(showRandomPopup, Math.random() * 30000 + 30000);
-    
-    // Show initial popup after 5 seconds
+    // Show initial popup after 5 seconds, then random intervals
     setTimeout(showRandomPopup, 5000);
 }
 
