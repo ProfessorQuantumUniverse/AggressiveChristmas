@@ -1,3 +1,14 @@
+> ## 📦 This project has moved
+>
+> **Aggressive Christmas** is now part of the **[toolsperiments](https://github.com/ProfessorQuantumUniverse/toolsperiments)** collection.
+>
+> - 🌐 **Live demo:** https://professorquantumuniverse.github.io/toolsperiments/aggressive-christmas/
+> - 📂 **Source:** https://github.com/ProfessorQuantumUniverse/toolsperiments/tree/main/aggressive-christmas
+>
+> This repository is **archived** and no longer maintained here.
+
+---
+
 # 🎄 Aggressive Christmas Countdown 🎅
 
 The **most intrusive, feature-rich, and festive** Christmas countdown website on the internet! This isn't your ordinary countdown timer - it's an immersive holiday experience that fills your screen with Christmas cheer... whether you want it or not! 😈
